@@ -33,6 +33,13 @@ function configure_for_wf_shape2() {
     GSUTIL_DRS_LOG_PATH="${WORKSPACE_BUCKET}/${WF_SUBMISSION_ID}/${WF_NAME}/**/${WF_TASK_NAME}/**/${WF_DRS_LOG_FILENAME}"
 }
 
+function convert_timestamps_to_timeseries() {
+	timestamp_input_filename=$1
+	timeseries_output_filename=$2
+	echo -e 'Timestamp\tCount' > $timeseries_output_filename
+	sed -e 's/$/\t1/' $timestamp_input_filename >> $timeseries_output_filename
+}
+
 
 # Configure for the workflow shape of the provided WF_SUBMISSION_ID
 # configure_for_wf_shape1
@@ -47,6 +54,7 @@ mkdir ${WORKING_DIR}
 DRS_LOG_LIST="${WORKING_DIR}/drs_log_list.txt"
 DRS_LOCALIZATION_LOG_LINES="${WORKING_DIR}/drs_localization_log_lines.txt"
 DRS_LOCALIZATION_TIMESTAMPS="${WORKING_DIR}/drs_localization_timestamps.txt"
+DRS_LOCALIZATION_TIMESERIES="${WORKING_DIR}/drs_localization_timeseries.tsv"
 
 time (gsutil ls -r ${GSUTIL_DRS_LOG_PATH} > $DRS_LOG_LIST)
 wc -l $DRS_LOG_LIST
@@ -59,5 +67,7 @@ time (cat ${DRS_LOG_LIST}| xargs -n 10 -P 3 -I gs_uris gsutil cat gs_uris | grep
 
 # Extract the timestamps from the workflow DRS localization log entries.
 cut -c 1-20 ${DRS_LOCALIZATION_LOG_LINES} | sort > ${DRS_LOCALIZATION_TIMESTAMPS}
+
+convert_timestamps_to_timeseries ${DRS_LOCALIZATION_TIMESTAMPS} ${DRS_LOCALIZATION_TIMESERIES}
 
 echo Done!

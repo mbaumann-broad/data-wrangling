@@ -9,8 +9,14 @@
 # Configure the Terra workflow submission id from which to extract the data.
 # Shape 1 - 20k inputs
 # WF_SUBMISSION_ID="f67b144e-5b7c-4361-9c9f-381b4ff7f3e5"
-# Shape 2 - 20k inputs
-WF_SUBMISSION_ID="a98b1b4d-25d5-489a-a955-191334c8ab32"
+
+# Shape 2 - 20k inputs - Feb 1, 2022 3:30 PM
+# WF_SUBMISSION_ID="a98b1b4d-25d5-489a-a955-191334c8ab32"
+
+# Shape 2 - 20k inputs - Oct 6, 2021 1:13 PM - aborted due to end of test window
+# Gen3 reported DRS request rate of ~250/RPS
+# See: https://nhlbi-biodatacatalyst.slack.com/archives/C01CSE5P7KM/p1633717393028700?thread_ts=1633548575.026200&cid=C01CSE5P7KM
+WF_SUBMISSION_ID="698cc797-8235-4585-873a-3d7a68192fa6"
 
 
 function configure_for_wf_shape1() {
@@ -34,7 +40,7 @@ configure_for_wf_shape2
 
 
 
-WORKING_DIR="submission${WF_SUBMISSION_ID}"
+WORKING_DIR="submission_${WF_SUBMISSION_ID}"
 # rm -rf ${WORKING_DIR}
 mkdir ${WORKING_DIR}
 

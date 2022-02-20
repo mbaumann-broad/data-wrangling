@@ -1,4 +1,4 @@
-#! /bin/bash -ux
+#! /bin/bash -u
 
 #
 # Copy Terra workflow selected log files from a Terra workspace bucket
@@ -36,18 +36,22 @@ function configure_for_wf_shape2 {
 function copy_gcs_uri_to_local_fs {
   gcs_uri=$1
   local_dir=$2
+
+  MAX_CONCURRENT_GSUTIL_PROCS=10
+
   # Construct the local full path
   uri_path=$(echo "$gcs_uri" | cut --delimiter=/ -f 4-)
   local_path=$local_dir/$uri_path
 
-  # Wait to start another gsutil process until less than 5 are currently running
+  # Wait to start another gsutil process until less than MAX_CONCURRENT_GSUTIL_PROCS are running
   current_jobs=$(pgrep -c gsutil)
-  while [ "$current_jobs" -ge 10 ]; do
-    echo waiting for a current gsutil process to end
+  while [ "$current_jobs" -ge $MAX_CONCURRENT_GSUTIL_PROCS ]; do
+    # echo waiting for a current gsutil process to end
     sleep 1
     current_jobs=$(pgrep -c gsutil)
   done
 
+  echo gsutil cp "$gcs_uri" "$local_path" &
   gsutil cp "$gcs_uri" "$local_path" &
 }
 

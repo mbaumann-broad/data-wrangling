@@ -29,6 +29,7 @@ function configure_for_wf_shape2 {
   WF_NAME="md5_n_by_m_scatter"
   WF_TASK_NAME='call-md5s'
   WF_DRS_LOG_FILENAME='*.log'
+  # shellcheck disable=SC2034
   GSUTIL_DRS_LOG_PATH="${WORKSPACE_BUCKET}/${WF_SUBMISSION_ID}/${WF_NAME}/**/${WF_TASK_NAME}/**/${WF_DRS_LOG_FILENAME}"
 }
 
@@ -36,18 +37,18 @@ function copy_gcs_uri_to_local_fs {
   gcs_uri=$1
   local_dir=$2
   # Construct the local full path
-  uri_path=$(echo $gcs_uri | cut --delimiter=/ -f 4-)
+  uri_path=$(echo "$gcs_uri" | cut --delimiter=/ -f 4-)
   local_path=$local_dir/$uri_path
 
   # Wait to start another gsutil process until less than 5 are currently running
-  current_jobs=$(ps | grep -c gsutil)
-  while [ $current_jobs -ge 5 ]; do
+  current_jobs=$(pgrep -c gsutil)
+  while [ "$current_jobs" -ge 10 ]; do
     echo waiting for a current gsutil process to end
     sleep 1
-    current_jobs=$(ps | grep -c gsutil)
+    current_jobs=$(pgrep -c gsutil)
   done
 
-  gsutil cp $gcs_uri $local_path &
+  gsutil cp "$gcs_uri" "$local_path" &
 }
 
 # Configure for the workflow shape of the provided WF_SUBMISSION_ID
@@ -58,6 +59,9 @@ WORKING_DIR="submission_${WF_SUBMISSION_ID}"
 # rm -rf ${WORKING_DIR}
 mkdir ${WORKING_DIR}
 
+WORKFLOW_LOG_DIR="${WORKING_DIR}/workflow-logs"
+mkdir WORKFLOW_LOG_DIR
+
 DRS_LOG_LIST="${WORKING_DIR}/drs_log_list.txt"
 
 # time (gsutil ls -r ${GSUTIL_DRS_LOG_PATH} > $DRS_LOG_LIST)
@@ -66,8 +70,8 @@ wc -l $DRS_LOG_LIST
 # This doesn't work because the destination file name is the same - no path is created.
 # time (cat $DRS_LOG_LIST | gsutil -m cp -I ${WORKING_DIR})
 
-while read drs_log_gcs_uri; do
-  copy_gcs_uri_to_local_fs $drs_log_gcs_uri $WORKING_DIR
+while read -r drs_log_gcs_uri; do
+  copy_gcs_uri_to_local_fs "$drs_log_gcs_uri" ${WORKFLOW_LOG_DIR}
 done <./$DRS_LOG_LIST
 
 echo Done!

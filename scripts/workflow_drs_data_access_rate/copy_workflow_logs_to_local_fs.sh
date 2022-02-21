@@ -29,6 +29,18 @@
 # All 5,000 workflows completed successfully.
 WF_SUBMISSION_ID="b739c1bc-2d10-4863-b7cc-3c0b8910d7b3"
 
+# Shape 2 - 10k inputs scattered 100/task - Submitted Feb 18, 2022 6:21 PM ET
+# At the time of this test, the BDC Gen3 staging deployment
+# was configured to scale similarly to BDC Gen3 production.
+# WF_SUBMISSION_ID="0441f747-18e6-4ef1-95b1-51d1d5ed75b1"
+
+# Shape 2 - 10k inputs scattered 10/task - Submitted Feb 18, 2022 7:55 PM ET
+# At the time of this test, the BDC Gen3 staging deployment
+# was configured to scale similarly to BDC Gen3 production.
+# WF_SUBMISSION_ID="1a72b974-00c4-4316-86d5-7a7b1045f9ef"
+
+
+
 function configure_for_wf_shape1 {
   WF_NAME="ga4ghMd5"
   WF_TASK_NAME='call-md5'
@@ -51,7 +63,7 @@ function copy_gcs_uris_to_local_fs {
 
   MAX_CONCURRENT_GSUTIL_PROCS=20
 
-
+  # Create a file containing the source and destination parameters for gsutil copy.
   GSUTIL_COPY_ARGS_FILE=$WORKING_DIR/drs_log_gsutil_copy_args.txt
   rm -f "$GSUTIL_COPY_ARGS_FILE"
   while read -r drs_log_gcs_uri; do
@@ -86,7 +98,8 @@ mkdir "$WORKFLOW_LOG_DIR"
 DRS_LOG_LIST="${WORKING_DIR}/drs_log_list.txt"
 # rm -f "$DRS_LOG_LIST"
 
-time (gsutil ls -r ${GSUTIL_DRS_LOG_PATH} > $DRS_LOG_LIST)
+# Create a list of selected log file GCS URIs
+time (gsutil ls -r "${GSUTIL_DRS_LOG_PATH}" > "$DRS_LOG_LIST")
 wc -l $DRS_LOG_LIST
 
 # This doesn't work because the destination file name is the same - no path is created.

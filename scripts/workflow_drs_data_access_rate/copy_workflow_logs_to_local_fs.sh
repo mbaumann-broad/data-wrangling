@@ -84,13 +84,14 @@ WORKFLOW_LOG_DIR="${WORKING_DIR}/workflow-logs"
 mkdir "$WORKFLOW_LOG_DIR"
 
 DRS_LOG_LIST="${WORKING_DIR}/drs_log_list.txt"
+# rm -f "$DRS_LOG_LIST"
 
-# time (gsutil ls -r ${GSUTIL_DRS_LOG_PATH} > $DRS_LOG_LIST)
+time (gsutil ls -r ${GSUTIL_DRS_LOG_PATH} > $DRS_LOG_LIST)
 wc -l $DRS_LOG_LIST
 
 # This doesn't work because the destination file name is the same - no path is created.
 # time (cat $DRS_LOG_LIST | gsutil -m cp -I ${WORKING_DIR})
 
-copy_gcs_uris_to_local_fs ${DRS_LOG_LIST} ${WORKFLOW_LOG_DIR}
+time copy_gcs_uris_to_local_fs ${DRS_LOG_LIST} ${WORKFLOW_LOG_DIR}
 
 echo Done!

@@ -60,7 +60,7 @@ wc -l $DRS_LOG_LIST
 
 # Extract the DRS localization log entries from the workflow logs in the workspace bucket
 # shellcheck disable=SC2002
-time (cat ${DRS_LOG_LIST} | xargs -n 10 -P 3 -I gs_uris gsutil cat gs_uris | grep "Localizing input drs://" >${DRS_LOCALIZATION_LOG_LINES})
+time (cat ${DRS_LOG_LIST} | xargs -n 10 -P 3 -I gs_uris gsutil cat gs_uris | grep -F  "Localizing input drs://" >${DRS_LOCALIZATION_LOG_LINES})
 
 # Extract the timestamps from the workflow DRS localization log entries.
 cut -c 1-20 ${DRS_LOCALIZATION_LOG_LINES} | sort >${DRS_LOCALIZATION_TIMESTAMPS}

@@ -40,7 +40,6 @@ WF_SUBMISSION_ID="b739c1bc-2d10-4863-b7cc-3c0b8910d7b3"
 # WF_SUBMISSION_ID="1a72b974-00c4-4316-86d5-7a7b1045f9ef"
 
 
-
 function configure_for_wf_shape1 {
   WF_NAME="ga4ghMd5"
   WF_TASK_NAME='call-md5'
@@ -89,22 +88,22 @@ configure_for_wf_shape1
 
 WORKING_DIR="./submission_${WF_SUBMISSION_ID}"
 # rm -rf ${WORKING_DIR}
-mkdir ${WORKING_DIR}
+mkdir -p ${WORKING_DIR}
 
 WORKFLOW_LOG_DIR="${WORKING_DIR}/workflow-logs"
 # rm -rf "${WORKFLOW_LOG_DIR"
-mkdir "$WORKFLOW_LOG_DIR"
+mkdir -p "$WORKFLOW_LOG_DIR"
 
 DRS_LOG_LIST="${WORKING_DIR}/drs_log_list.txt"
 # rm -f "$DRS_LOG_LIST"
 
 # Create a list of selected log file GCS URIs
 time (gsutil ls -r "${GSUTIL_DRS_LOG_PATH}" > "$DRS_LOG_LIST")
-wc -l $DRS_LOG_LIST
+wc -l "$DRS_LOG_LIST"
 
 # This doesn't work because the destination file name is the same - no path is created.
 # time (cat $DRS_LOG_LIST | gsutil -m cp -I ${WORKING_DIR})
 
-time copy_gcs_uris_to_local_fs ${DRS_LOG_LIST} ${WORKFLOW_LOG_DIR}
+time copy_gcs_uris_to_local_fs "${DRS_LOG_LIST}" "${WORKFLOW_LOG_DIR}"
 
 echo Done!

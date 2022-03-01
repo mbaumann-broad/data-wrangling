@@ -1,22 +1,39 @@
 #! /bin/bash -ux
 
 #
-# Extract the DRS localization timestamps for a workflow run
-# to create a time series graph of the DRS data access rate.
+# Extract the DRS localization timestamps from workflow logs
+# in the workspace bucket to create a time series graph of the DRS data access rate.
 #
 
-# Configure the Terra workflow submission id from which to extract the data.
-# Shape 1 - 20k inputs - Oct 2, 2021 11:28 AM PT
-# WF_SUBMISSION_ID="f67b144e-5b7c-4361-9c9f-381b4ff7f3e5"
+## Configure the Terra workflow submission id from which to copy the logs.
+ #
+ ## Shape 1 - 5k inputs - Submitted Feb 17, 2022 6:40 PM ET
+ ## NOTE: The BDC Gen3 staging deployment was unknowingly configured
+ ## for a lower level of scalability than BDC Gen3 production at the time this test was run.
+ ## WF_SUBMISSION_ID="1b21ce93-6c6f-48a6-a82a-615dc02f5fce"
+ #
+ ## Shape 1 - 5k inputs - Submitted Feb 17, 2022 7:50 PM ET
+ ## NOTE: The BDC Gen3 staging deployment was unknowingly configured
+ ## for a lower level of scalability than BDC Gen3 production at the time this test was run.
+ ## WF_SUBMISSION_ID="6f10eda8-999a-470e-a700-5b5fc3d3cb1e"
+ #
+ ## Shape 1 - 5k inputs - Submitted Feb 18, 2022, 5:26 PM ET
+ ## At the time of this test, the BDC Gen3 staging deployment was configured to
+ ## scale similarly to BDC Gen3 production - and it showed in
+ ## much improved results compared to the runs above.
+ ## All 5,000 workflows completed successfully.
+ ## WF_SUBMISSION_ID="b739c1bc-2d10-4863-b7cc-3c0b8910d7b3"
+ #
+ ## Shape 2 - 10k inputs scattered 100/task - Submitted Feb 18, 2022 6:21 PM ET
+ ## At the time of this test, the BDC Gen3 staging deployment
+ ## was configured to scale similarly to BDC Gen3 production.
+ ## WF_SUBMISSION_ID="0441f747-18e6-4ef1-95b1-51d1d5ed75b1"
+ #
+ ## Shape 2 - 10k inputs scattered 10/task - Submitted Feb 18, 2022 7:55 PM ET
+ ## At the time of this test, the BDC Gen3 staging deployment
+ ## was configured to scale similarly to BDC Gen3 production.
+ WF_SUBMISSION_ID="1a72b974-00c4-4316-86d5-7a7b1045f9ef"
 
-# Shape 2 - 20k inputs scattered by 100 per task - Feb 1, 2022 3:30 PM PT
-# WF_SUBMISSION_ID="a98b1b4d-25d5-489a-a955-191334c8ab32"
-
-# Shape 2 - 20k inputs scattered 20 per task - Oct 6, 2021 1:13 PM PT - aborted
-# Aborted due to end of test window. At the time, only 143 of 1,000 shards were created.
-# Gen3 reported DRS request rate of ~250/RPS
-# See: https://nhlbi-biodatacatalyst.slack.com/archives/C01CSE5P7KM/p1633717393028700?thread_ts=1633548575.026200&cid=C01CSE5P7KM
-WF_SUBMISSION_ID="698cc797-8235-4585-873a-3d7a68192fa6"
 
 function configure_for_wf_shape1() {
   WF_NAME="ga4ghMd5"
@@ -45,26 +62,26 @@ configure_for_wf_shape2
 
 WORKING_DIR="submission_${WF_SUBMISSION_ID}"
 # rm -rf ${WORKING_DIR}
-mkdir ${WORKING_DIR}
+mkdir -p ${WORKING_DIR}
 
 DRS_LOG_LIST="${WORKING_DIR}/drs_log_list.txt"
 DRS_LOCALIZATION_LOG_LINES="${WORKING_DIR}/drs_localization_log_lines.txt"
 DRS_LOCALIZATION_TIMESTAMPS="${WORKING_DIR}/drs_localization_timestamps.txt"
 DRS_LOCALIZATION_TIMESERIES="${WORKING_DIR}/drs_localization_timeseries.tsv"
 
-time (gsutil ls -r "${GSUTIL_DRS_LOG_PATH}" >$DRS_LOG_LIST)
-wc -l $DRS_LOG_LIST
+time (gsutil ls -r "${GSUTIL_DRS_LOG_PATH}" >"$DRS_LOG_LIST")
+wc -l "$DRS_LOG_LIST"
 
 # This doesn't work because the destination file name is the same - no path is created.
 # time (cat $DRS_LOG_LIST | gsutil -m cp -I ${WORKING_DIR})
 
 # Extract the DRS localization log entries from the workflow logs in the workspace bucket
 # shellcheck disable=SC2002
-time (cat ${DRS_LOG_LIST} | xargs -n 10 -P 3 -I gs_uris gsutil cat gs_uris | grep -F  "Localizing input drs://" >${DRS_LOCALIZATION_LOG_LINES})
+time (cat "${DRS_LOG_LIST}" | xargs -n 10 -P 3 -I gs_uris gsutil cat gs_uris | grep -F  "Localizing input drs://" >"${DRS_LOCALIZATION_LOG_LINES}")
 
 # Extract the timestamps from the workflow DRS localization log entries.
-cut -c 1-20 ${DRS_LOCALIZATION_LOG_LINES} | sort >${DRS_LOCALIZATION_TIMESTAMPS}
+cut -c 1-20 "${DRS_LOCALIZATION_LOG_LINES}" | sort >"${DRS_LOCALIZATION_TIMESTAMPS}"
 
-convert_timestamps_to_timeseries ${DRS_LOCALIZATION_TIMESTAMPS} ${DRS_LOCALIZATION_TIMESERIES}
+convert_timestamps_to_timeseries "${DRS_LOCALIZATION_TIMESTAMPS}" "${DRS_LOCALIZATION_TIMESERIES}"
 
 echo Done!

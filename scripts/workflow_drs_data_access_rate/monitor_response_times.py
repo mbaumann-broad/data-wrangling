@@ -1,11 +1,12 @@
 import functools
 import threading
 import time
-
 from abc import ABC, abstractmethod
 from datetime import datetime
 from threading import currentThread, Thread
+from typing import Tuple
 
+import requests
 import schedule
 
 
@@ -77,43 +78,75 @@ class ResponseTimeMonitor(Scheduler):
             self.output_filename = output_filename
 
         @abstractmethod
-        def measure_response_time(self) -> float:
+        def measure_response_time(self) -> Tuple[float, int]:
             pass
 
         def measure_and_report(self):
             start_time = datetime.now()
-            response_time = self.measure_response_time()
+            response_time, status_code = self.measure_response_time()
+            response_time = round(response_time, 3)
             with open(self.output_filename, "a") as fh:
-                fh.write(f"{start_time},{response_time}\n")
+                fh.write(f"{start_time},{response_time},{status_code}\n")
 
     class BondResponseTimeReporter(ResponseTimeReporter):
         def __init__(self, output_filename):
             super().__init__(output_filename)
 
-        def measure_response_time(self) -> float:
-            # TODO Measure Bond response time
-            print(f"{datetime.now()} checking bond response time on {currentThread().name}")
-            return 1.1
+        # TODO Support configuration of these by project and deployment tier.
+        BOND_HOST = "broad-bond-dev.appspot.com"
+        BOND_PROVIDER = "fence"  # BDCat
 
+        # When run in Terra, this returns the Terra user pet SA token
+        @staticmethod
+        def get_terra_user_pet_sa_token() -> str:
+            import google.auth.transport.requests
+            creds, projects = google.auth.default()
+            creds.refresh(google.auth.transport.requests.Request())
+            token = creds.token
+            return token
+
+        def measure_response_time(self) -> Tuple[float, int]:
+            # Measure Bond response time
+            terra_user_token = self.get_terra_user_pet_sa_token()
+            print(f"{datetime.now()} checking bond response time on {currentThread().name}")
+            start_time = time.time()
+            headers = {
+                'authorization': f"Bearer {terra_user_token}",
+                'content-type': "application/json"
+            }
+            resp = requests.get(f"https://{self.BOND_HOST}/api/link/v1/{self.BOND_PROVIDER}/accesstoken",
+                                headers=headers)
+            duration = time.time() - start_time
+            return duration, resp.status_code
 
     class FenceResponseTimeReporter(ResponseTimeReporter):
         def __init__(self, output_filename):
             super().__init__(output_filename)
 
-        def measure_response_time(self) -> float:
-            # TODO Measure Fence response time
+        # TODO Support configuration of this by project and deployment tier.
+        FENCE_HOST = "staging.gen3.biodatacatalyst.nhlbi.nih.gov"
+
+        def measure_response_time(self) -> Tuple[float, int]:
+            # Measure Fence health status check response time
             print(f"{datetime.now()} checking fence response time on {currentThread().name}")
-            return 2.2
+            start_time = time.time()
+            headers = {
+                'accept': "*/*"
+            }
+            resp = requests.get(f"https://{self.FENCE_HOST}/_status", headers=headers)
+            duration = time.time() - start_time
+            return duration, resp.status_code
+
 
     @catch_exceptions()
     def check_bond_response_time(self):
-        output_filename = "bond_response_times.csv"
+        output_filename = "bond_fence_token_response_times.csv"
         reporter = self.BondResponseTimeReporter(output_filename)
         reporter.measure_and_report()
         
     @catch_exceptions()
     def check_fence_response_time(self):
-        output_filename = "fence_response_times.csv"
+        output_filename = "fence_health_status_response_times.csv"
         reporter = self.FenceResponseTimeReporter(output_filename)
         reporter.measure_and_report()
 

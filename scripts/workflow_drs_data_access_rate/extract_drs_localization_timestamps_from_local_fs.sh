@@ -1,9 +1,9 @@
 #! /bin/bash -ux
 
 #
-# Extract the DRS localization timestamps from workflow logs on the
-# local file system to create a time series data for graphing
-# the DRS data access rate.
+# Extract all the DRS localization timestamps from workflow logs
+# under a directory on the local file system to create time series data
+# for graphing the DRS data access rate.
 #
 
 # Configure the Terra workflow submission id from which to copy the logs.

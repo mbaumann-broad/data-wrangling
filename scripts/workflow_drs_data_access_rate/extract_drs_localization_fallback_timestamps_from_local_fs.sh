@@ -1,9 +1,13 @@
 #! /bin/bash -ux
 
 #
-# Extract the DRS localization timestamps from workflow logs on the
-# local file system to create a time series data for graphing
-# the DRS data access rate.
+# Extract the DRS localization "fallback" timestamps from workflow logs
+# under a directory on the local file system to create time series data
+# for graphing the DRS data access rate.
+#
+# DRS localization fallback occurs when the Terra workflow DRS localizer
+# did not receive a signed URL within the allotted time and therefore
+# fell back to using a cloud-native URI and service account key.
 #
 
 # Configure the Terra workflow submission id from which to copy the logs.
@@ -49,16 +53,19 @@ mkdir -p ${WORKING_DIR}
 WORKFLOW_LOG_DIR="${WORKING_DIR}/workflow-logs"
 
 DRS_LOCALIZATION_LOG_LINES="${WORKING_DIR}/drs_localization_log_lines.txt"
-DRS_LOCALIZATION_TIMESTAMPS="${WORKING_DIR}/drs_localization_timestamps.txt"
-DRS_LOCALIZATION_TIMESERIES="${WORKING_DIR}/drs_localization_timeseries.tsv"
+DRS_LOCALIZATION_FALLBACK_TIMESTAMPS="${WORKING_DIR}/drs_localization_fallback_timestamps.txt"
+DRS_LOCALIZATION_FALLBACK_TIMESERIES="${WORKING_DIR}/drs_localization_fallback_timeseries.tsv"
 
-# Extract the DRS localization log entries from the workflow logs on the local file system
+# Extract the DRS localization log entries in which a "fallback" occurred.
+# Identifying the log entries in which fallback occurred requires searching
+# across multiple lines. This is performed using the GNU grep support for
+# PERL-compatible Regular Expressions (PCRE).
 # shellcheck disable=SC2038
-time (find "$WORKFLOW_LOG_DIR" -type f | xargs grep -F --no-filename "Localizing input drs://" > "${DRS_LOCALIZATION_LOG_LINES}")
+time (find "$WORKFLOW_LOG_DIR" -type f | xargs grep --no-filename -Pzo "\d\d\d\d/\d\d/\d\d.*Localizing input drs:.*\nRequester Pays project ID is.*\nAttempting to download.*\nSuccessfully activated service account.*" | sed -z -e 's/\n/  /g' | tr '\0' '\n' > "${DRS_LOCALIZATION_LOG_LINES}")
 
 # Extract the timestamps from the workflow DRS localization log entries.
-cut -c 1-20 ${DRS_LOCALIZATION_LOG_LINES} | sort >"${DRS_LOCALIZATION_TIMESTAMPS}"
+cut -c 1-20 ${DRS_LOCALIZATION_LOG_LINES} | sort >"${DRS_LOCALIZATION_FALLBACK_TIMESTAMPS}"
 
-convert_timestamps_to_timeseries "${DRS_LOCALIZATION_TIMESTAMPS}" "${DRS_LOCALIZATION_TIMESERIES}"
+convert_timestamps_to_timeseries "${DRS_LOCALIZATION_FALLBACK_TIMESTAMPS}" "${DRS_LOCALIZATION_FALLBACK_TIMESERIES}"
 
 echo Done!

@@ -2,10 +2,10 @@
 
 ##############################################################################
 # Name
-# anvil_samtools.sh
+# samtools4grp.sh
 #
 # Synopsis
-# anvil_samtools.sh [standard samtools command-line options]
+# samtools4grp.sh [standard samtools command-line options]
 #
 # Description
 # Enables use of samtools for Google "gs://" URIs in requester pays buckets.
@@ -17,15 +17,15 @@
 # samtools version 1.13 or later (1.15 or later recommended)
 #
 # Installation
-# 1. Put this file (anvil_samtools.sh) in the Terra Cloud Environment
+# 1. Put this file (samtools4grp.sh) in the Terra Cloud Environment
 # 2. In a Terra Terminal, run:
-#       chmod +x ./anvil_samtools.sh
-# 3. (Optional) Add the directory containing anvil_samtools.sh to the PATH
+#       chmod +x ./samtools4grp.sh
+# 3. (Optional) Add the directory containing samtools4grp.sh to the PATH
 #    environment variable.
 #
 # Example Use
 # Run "samtools view -H" on an AnVIL 1,000 Genomes CRAM file:
-#   ./anvil_samtools.sh view -H gs://fc-56ac46ea-efc4-4683-b6d5-6d95bed41c5e/CCDG_13607/Project_CCDG_13607_B01_GRM_WGS.cram.2019-02-06/Sample_HG02373/analysis/HG02373.final.cram HG02373.final.cram
+#   ./samtools4grp.sh view -H gs://fc-56ac46ea-efc4-4683-b6d5-6d95bed41c5e/CCDG_13607/Project_CCDG_13607_B01_GRM_WGS.cram.2019-02-06/Sample_HG02373/analysis/HG02373.final.cram HG02373.final.cram
 #
 ##############################################################################
 
